@@ -5,7 +5,7 @@
 
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
-import React, { Fragment, useRef, useState } from 'react';
+import React, { Fragment } from 'react';
 import ChevronDown16 from '@carbon/icons-react/lib/chevron--down/16';
 import ChevronUp16 from '@carbon/icons-react/lib/chevron--up/16';
 import { settings } from 'carbon-components';
@@ -23,12 +23,18 @@ export const namespace = getComponentNamespace('combo-button');
 
 const { prefix } = settings;
 
-const ComboButton = ({ children, className, direction }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapper = useRef(null);
+class ComboButton extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isOpen: false,
+    };
+    this.wrapper = React.createRef();
+  }
 
-  const getMenuOffset = () => {
-    const { top } = wrapper.current.getBoundingClientRect();
+  getMenuOffset = () => {
+    const { direction } = this.props;
+    const { top } = this.wrapper.current.getBoundingClientRect();
     const isTop = direction === TooltipDirection.TOP;
     return {
       top: isTop ? top : top * -1,
@@ -36,117 +42,126 @@ const ComboButton = ({ children, className, direction }) => {
     };
   };
 
-  const childrenArray = React.Children.toArray(children);
+  handleToggle = () => {
+    this.setState(prevState => ({
+      isOpen: !prevState.isOpen,
+    }));
+  };
 
-  // Save first child (e.g., primary action) to use as a `Button`:
-  const primaryActionWithProps = [childrenArray[0]].map(button => {
-    // Need to explicitly define props, versus using `...rest`,
-    // because otherwise unused `OverflowMenuItem`-related props from
-    // may trigger invalid DOM warnings.
-    const {
-      children,
-      className,
-      disabled,
-      iconDescription,
-      onClick,
-      renderIcon: Icon,
-    } = button.props;
-    return (
-      <Button
-        className={classnames(className, `${namespace}--primary`)}
-        disabled={disabled}
-        iconDescription={iconDescription}
-        kind="primary"
-        key={button.id}
-        onClick={onClick}
-        renderIcon={Icon}
-        type="button"
-      >
-        <span className={`${prefix}--text-truncate--end`} title={children}>
-          {children}
-        </span>
-      </Button>
-    );
-  });
+  render() {
+    const { children, className, direction } = this.props;
+    const { isOpen } = this.state;
+    const childrenArray = React.Children.toArray(children);
 
-  // Save remaining children to be displayed in the `OverflowMenu`:
-  let overflowItems;
-  let overflowMenuItemWithProps;
-  if (childrenArray.length > 1) {
-    overflowItems = childrenArray.slice(1);
-
-    // Create `OverflowMenuItem` components:
-    overflowMenuItemWithProps = overflowItems.map((item, index) => {
+    // Save first child (e.g., primary action) to use as a `Button`:
+    const primaryActionWithProps = [childrenArray[0]].map(button => {
       // Need to explicitly define props, versus using `...rest`,
-      // because otherwise unused `Button`-related props from
+      // because otherwise unused `OverflowMenuItem`-related props from
       // may trigger invalid DOM warnings.
       const {
         children,
         className,
         disabled,
+        iconDescription,
         onClick,
-        primaryFocus,
         renderIcon: Icon,
-      } = item.props;
-
+      } = button.props;
       return (
-        <OverflowMenuItem
-          className={classnames(className, `${namespace}-item__wrapper`)}
+        <Button
+          className={classnames(className, `${namespace}--primary`)}
           disabled={disabled}
-          itemText={
-            <Fragment>
-              <span
-                className={`${prefix}--text-truncate--end`}
-                title={children}
-              >
-                {children}
-              </span>
-              <Icon />
-            </Fragment>
-          }
-          key={item.id}
+          iconDescription={iconDescription}
+          kind="primary"
+          key={button.id}
           onClick={onClick}
-          primaryFocus={!primaryFocus && index === 0 ? true : primaryFocus}
-        />
+          renderIcon={Icon}
+          type="button"
+        >
+          <span className={`${prefix}--text-truncate--end`} title={children}>
+            {children}
+          </span>
+        </Button>
       );
     });
+
+    // Save remaining children to be displayed in the `OverflowMenu`:
+    let overflowItems;
+    let overflowMenuItemWithProps;
+    if (childrenArray.length > 1) {
+      overflowItems = childrenArray.slice(1);
+
+      // Create `OverflowMenuItem` components:
+      overflowMenuItemWithProps = overflowItems.map((item, index) => {
+        // Need to explicitly define props, versus using `...rest`,
+        // because otherwise unused `Button`-related props from
+        // may trigger invalid DOM warnings.
+        const {
+          children,
+          className,
+          disabled,
+          onClick,
+          primaryFocus,
+          renderIcon: Icon,
+        } = item.props;
+
+        return (
+          <OverflowMenuItem
+            className={classnames(className, `${namespace}-item__wrapper`)}
+            disabled={disabled}
+            itemText={
+              <Fragment>
+                <span
+                  className={`${prefix}--text-truncate--end`}
+                  title={children}
+                >
+                  {children}
+                </span>
+                <Icon />
+              </Fragment>
+            }
+            key={item.id}
+            onClick={onClick}
+            primaryFocus={!primaryFocus && index === 0 ? true : primaryFocus}
+          />
+        );
+      });
+    }
+
+    return (
+      <div
+        className={classnames(namespace, className)}
+        ref={this.wrapper}
+        data-floating-menu-container
+      >
+        {primaryActionWithProps}
+
+        {overflowMenuItemWithProps !== undefined && (
+          <OverflowMenu
+            className={classnames(
+              // Button-specific classes for styling:
+              buttonNamespace,
+              `${prefix}--btn`,
+              `${prefix}--btn--primary`,
+
+              // Button as a child of combo button:
+              `${namespace}__button`,
+
+              // Overflow menu as a child of combo button:
+              `${namespace}__overflow-menu`
+            )}
+            direction={direction}
+            menuOffset={this.getMenuOffset}
+            menuOptionsClass={`${prefix}--list-box__menu`}
+            onClick={this.handleToggle}
+            renderIcon={isOpen ? ChevronUp16 : ChevronDown16}
+          >
+            {overflowMenuItemWithProps}
+          </OverflowMenu>
+        )}
+      </div>
+    );
   }
-
-  return (
-    <div
-      className={classnames(namespace, className)}
-      ref={wrapper}
-      data-floating-menu-container
-    >
-      {primaryActionWithProps}
-
-      {overflowMenuItemWithProps !== undefined && (
-        <OverflowMenu
-          className={classnames(
-            // Button-specific classes for styling:
-            buttonNamespace,
-            `${prefix}--btn`,
-            `${prefix}--btn--primary`,
-
-            // Button as a child of combo button:
-            `${namespace}__button`,
-
-            // Overflow menu as a child of combo button:
-            `${namespace}__overflow-menu`
-          )}
-          direction={direction}
-          menuOffset={getMenuOffset}
-          menuOptionsClass={`${prefix}--list-box__menu`}
-          onClose={() => setIsOpen(false)}
-          onOpen={() => setIsOpen(true)}
-          renderIcon={isOpen ? ChevronUp16 : ChevronDown16}
-        >
-          {overflowMenuItemWithProps}
-        </OverflowMenu>
-      )}
-    </div>
-  );
-};
+}
 
 ComboButton.propTypes = {
   /** @type {node} The child nodes. */
