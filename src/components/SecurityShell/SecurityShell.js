@@ -36,15 +36,17 @@ const SecurityShellHeader = ({ children, ...other }) => (
 const SecurityShellHeaderAction = ({
   children,
   id,
-  isActive: activeAction,
+  activeAction,
   popover,
+  toggleActive,
+  button,
   ...other
 }) => {
   const isActive = popover && activeAction === id;
 
   return (
     <>
-      {children}
+      {button ? cloneElement(button, { onClick: toggleActive }) : children}
 
       {isActive && (
         <div
@@ -59,15 +61,19 @@ const SecurityShellHeaderAction = ({
 };
 
 const SecurityShellHeaderActions = ({ children, ...other }) => {
-  // const [isActive, setIsActive] = useState(null);
+  const [activeAction, setActiveAction] = useState(null);
 
   return (
     <div className={`${namespace}__group ${shellNamespace}__group`} {...other}>
-      {Children.map(children, (child, index) =>
-        cloneElement(child, {
-          id: `${shellNamespace}__header__action--${index}`,
-        })
-      )}
+      {Children.map(children, (child, index) => {
+        const id = `${shellNamespace}__header__action--${index}`;
+        return cloneElement(child, {
+          id,
+          activeAction,
+          toggleActive: () =>
+            activeAction === id ? setActiveAction(null) : setActiveAction(id),
+        });
+      })}
     </div>
   );
 };

@@ -106,6 +106,7 @@ export const Default = () => (
         </SecurityShellHeaderAction>
 
         <SecurityShellHeaderAction
+          button={<IconButton renderIcon={Notification20} />}
           popover={
             <>
               <SecurityShellHeaderPopoverHeader>
@@ -142,11 +143,10 @@ export const Default = () => (
               </SecurityShellHeaderPopoverFooter>
             </>
           }
-        >
-          <IconButton renderIcon={Notification20} />
-        </SecurityShellHeaderAction>
+        />
 
         <SecurityShellHeaderAction
+          button={<IconButton renderIcon={User20} />}
           popover={
             <>
               <SecurityShellHeaderPopoverHeader>
@@ -164,9 +164,7 @@ export const Default = () => (
               </SecurityShellHeaderPopoverFooter>
             </>
           }
-        >
-          <IconButton renderIcon={User20} />
-        </SecurityShellHeaderAction>
+        />
       </SecurityShellHeaderActions>
     </SecurityShellHeader>
   </SecurityShell>
