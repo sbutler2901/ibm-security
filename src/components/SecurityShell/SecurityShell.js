@@ -38,7 +38,7 @@ const SecurityShellHeaderAction = ({
   id,
   activeAction,
   popover,
-  toggleActive,
+  makeActive,
   button,
   ...other
 }) => {
@@ -46,7 +46,13 @@ const SecurityShellHeaderAction = ({
 
   return (
     <>
-      {button ? cloneElement(button, { onClick: toggleActive }) : children}
+      {button
+        ? cloneElement(button, {
+            onClick: () => (isActive ? makeActive(null) : makeActive(id)),
+            onBlur: () => isActive && makeActive(null),
+            onFocus: () => console.debug('FOCUSED'),
+          })
+        : children}
 
       {isActive && (
         <div
@@ -70,8 +76,7 @@ const SecurityShellHeaderActions = ({ children, ...other }) => {
         return cloneElement(child, {
           id,
           activeAction,
-          toggleActive: () =>
-            activeAction === id ? setActiveAction(null) : setActiveAction(id),
+          makeActive: setActiveAction,
         });
       })}
     </div>
