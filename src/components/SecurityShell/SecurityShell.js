@@ -43,12 +43,22 @@ const SecurityShellHeaderAction = ({
   ...other
 }) => {
   const isActive = popover && activeAction === id;
+  const buttonRef = React.useRef(null);
+
+  const onClick = () => {
+    if (isActive) makeActive(null);
+    else {
+      makeActive(id);
+      buttonRef.current.focus();
+    }
+  };
 
   return (
     <>
       {button
         ? cloneElement(button, {
-            onClick: () => (isActive ? makeActive(null) : makeActive(id)),
+            ref: buttonRef,
+            onClick,
             onBlur: () => isActive && makeActive(null),
             onFocus: () => console.debug('FOCUSED'),
           })
