@@ -72,9 +72,8 @@ const SecurityShellHeaderActions = ({ children, ...other }) => {
   return (
     <div className={`${namespace}__group ${shellNamespace}__group`} {...other}>
       {Children.map(children, (child, index) => {
-        const id = `${shellNamespace}__header__action--${index}`;
         return cloneElement(child, {
-          id,
+          id: `${shellNamespace}__header__action--${index}`,
           activeAction,
           makeActive: setActiveAction,
         });
